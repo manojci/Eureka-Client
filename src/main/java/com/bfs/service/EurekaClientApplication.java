@@ -72,4 +72,18 @@ public class EurekaClientApplication {
         result.add(restURI);
         return result;
     }
+    
+    @RequestMapping(value = "/v1/user", method = RequestMethod.GET)
+    public List<Object> findByUsername() {
+        List<Object> result = new ArrayList<Object>();
+        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(USER_REGISTER_SERVICE);
+        String restURI = null;
+        for (ServiceInstance ServiceInstance : serviceInstances) {
+            if (ServiceInstance.getServiceId().equals(USER_REGISTER_SERVICE)) {
+                restURI = ServiceInstance.getUri().toString() + "/" + "v1/user";
+            }
+        }
+        result.add(restURI);
+        return result;
+    }
 }
