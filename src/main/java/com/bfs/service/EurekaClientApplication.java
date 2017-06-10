@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableDiscoveryClient
 public class EurekaClientApplication {
 
-    public static final String CITY_SEARCH = "CITYSEARCH";
+    public static final String CITY_SEARCH = "CITY-SEARCH";
     
-    public static final String TRAVEL_DETAILS = "TRAVELDETAILS";
+    public static final String TRAVEL_DETAILS = "TRAVEL-DETAILS";
+    
+    public static final String USER_REGISTER_SERVICE = "USER-REGISER-SERVICE";
 
     @Autowired
     private DiscoveryClient discoveryClient;
@@ -51,6 +53,20 @@ public class EurekaClientApplication {
         for (ServiceInstance ServiceInstance : serviceInstances) {
             if (ServiceInstance.getServiceId().equals(TRAVEL_DETAILS)) {
                 restURI = ServiceInstance.getUri().toString() + "/" + "v1/trip/travel-details";
+            }
+        }
+        result.add(restURI);
+        return result;
+    }
+
+    @RequestMapping(value = "/v1/save", method = RequestMethod.GET)
+    public List<Object> registerUser() {
+        List<Object> result = new ArrayList<Object>();
+        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(USER_REGISTER_SERVICE);
+        String restURI = null;
+        for (ServiceInstance ServiceInstance : serviceInstances) {
+            if (ServiceInstance.getServiceId().equals(USER_REGISTER_SERVICE)) {
+                restURI = ServiceInstance.getUri().toString() + "/" + "v1/user/save";
             }
         }
         result.add(restURI);
