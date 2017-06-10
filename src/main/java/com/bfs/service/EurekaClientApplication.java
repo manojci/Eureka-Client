@@ -29,7 +29,7 @@ public class EurekaClientApplication {
         SpringApplication.run(EurekaClientApplication.class, args);
     }
 
-    @RequestMapping(value = "/getCities", method = RequestMethod.GET)
+    @RequestMapping(value = "/v1/cities", method = RequestMethod.GET)
     public List<Object> getCities() {
         List<Object> result = new ArrayList<Object>();
         List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(CITY_SEARCH);
@@ -43,7 +43,7 @@ public class EurekaClientApplication {
         return result;
     }
 
-    @RequestMapping(value = "travel-details", method = RequestMethod.GET)
+    @RequestMapping(value = "/v1/travel-details", method = RequestMethod.GET)
     public List<Object> getTravelDetails() {
         List<Object> result = new ArrayList<Object>();
         List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(TRAVEL_DETAILS);
