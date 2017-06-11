@@ -23,6 +23,8 @@ public class EurekaClientApplication {
     public static final String TRAVEL_DETAILS = "TRAVEL-DETAILS";
     
     public static final String USER_REGISTER_SERVICE = "USER-REGISER-SERVICE";
+    
+    public static final String ROUTE_SERVICE = "ROUTE-SERVICE";
 
     @Autowired
     private DiscoveryClient discoveryClient;
@@ -81,6 +83,34 @@ public class EurekaClientApplication {
         for (ServiceInstance ServiceInstance : serviceInstances) {
             if (ServiceInstance.getServiceId().equals(USER_REGISTER_SERVICE)) {
                 restURI = ServiceInstance.getUri().toString() + "/" + "v1/user";
+            }
+        }
+        result.add(restURI);
+        return result;
+    }
+    
+    @RequestMapping(value = "/v1/add/route", method = RequestMethod.GET)
+    public List<Object> registerRoute() {
+        List<Object> result = new ArrayList<Object>();
+        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(ROUTE_SERVICE);
+        String restURI = null;
+        for (ServiceInstance ServiceInstance : serviceInstances) {
+            if (ServiceInstance.getServiceId().equals(ROUTE_SERVICE)) {
+                restURI = ServiceInstance.getUri().toString() + "/" + "v1/add/route";
+            }
+        }
+        result.add(restURI);
+        return result;
+    }
+    
+    @RequestMapping(value = "/v1/route", method = RequestMethod.GET)
+    public List<Object> findByOriginAndDestination() {
+        List<Object> result = new ArrayList<Object>();
+        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(ROUTE_SERVICE);
+        String restURI = null;
+        for (ServiceInstance ServiceInstance : serviceInstances) {
+            if (ServiceInstance.getServiceId().equals(ROUTE_SERVICE)) {
+                restURI = ServiceInstance.getUri().toString() + "/" + "v1/route";
             }
         }
         result.add(restURI);
