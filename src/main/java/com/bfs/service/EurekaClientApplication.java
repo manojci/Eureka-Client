@@ -1,119 +1,51 @@
 package com.bfs.service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.net.MalformedURLException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 @SpringBootApplication
 @RestController
 @EnableDiscoveryClient
+@EnableCircuitBreaker
 public class EurekaClientApplication {
 
-    public static final String CITY_SEARCH = "CITY-SEARCH";
-    
-    public static final String TRAVEL_DETAILS = "TRAVEL-DETAILS";
-    
-    public static final String USER_REGISTER_SERVICE = "USER-REGISER-SERVICE";
-    
-    public static final String ROUTE_SERVICE = "ROUTE-SERVICE";
+	@Autowired
+	private LoadBalancerClient loadBalancerClient;
 
-    @Autowired
-    private DiscoveryClient discoveryClient;
+	@Bean
+	public RestTemplate getRestTemplate() {
+		return new RestTemplate();
+	}
 
-    public static void main(String[] args) {
-        SpringApplication.run(EurekaClientApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaClientApplication.class, args);
+	}
 
-    @RequestMapping(value = "/v1/cities", method = RequestMethod.GET)
-    public List<Object> getCities() {
-        List<Object> result = new ArrayList<Object>();
-        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(CITY_SEARCH);
-        String restURI = null;
-        for (ServiceInstance ServiceInstance : serviceInstances) {
-            if (ServiceInstance.getServiceId().equals(CITY_SEARCH)) {
-                restURI = ServiceInstance.getUri().toString() + "/" + "v1/trip/city-search";
-            }
-        }
-        result.add(restURI);
-        return result;
-    }
+	@HystrixCommand(fallbackMethod = "fallbackMethod")
+	@RequestMapping(path = "/client", method = RequestMethod.GET)
+	public String getClient() throws MalformedURLException {
+		ServiceInstance si = loadBalancerClient.choose("bookservice");
+		String result = getRestTemplate()
+				.exchange(si.getUri().toURL().toString() + "/" + "books", HttpMethod.GET, null, String.class).getBody();
+		return result;
+	}
 
-    @RequestMapping(value = "/v1/travel-details", method = RequestMethod.GET)
-    public List<Object> getTravelDetails() {
-        List<Object> result = new ArrayList<Object>();
-        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(TRAVEL_DETAILS);
-        String restURI = null;
-        for (ServiceInstance ServiceInstance : serviceInstances) {
-            if (ServiceInstance.getServiceId().equals(TRAVEL_DETAILS)) {
-                restURI = ServiceInstance.getUri().toString() + "/" + "v1/trip/travel-details";
-            }
-        }
-        result.add(restURI);
-        return result;
-    }
-
-    @RequestMapping(value = "/v1/save", method = RequestMethod.GET)
-    public List<Object> registerUser() {
-        List<Object> result = new ArrayList<Object>();
-        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(USER_REGISTER_SERVICE);
-        String restURI = null;
-        for (ServiceInstance ServiceInstance : serviceInstances) {
-            if (ServiceInstance.getServiceId().equals(USER_REGISTER_SERVICE)) {
-                restURI = ServiceInstance.getUri().toString() + "/" + "v1/user/save";
-            }
-        }
-        result.add(restURI);
-        return result;
-    }
-    
-    @RequestMapping(value = "/v1/user", method = RequestMethod.GET)
-    public List<Object> findByUsername() {
-        List<Object> result = new ArrayList<Object>();
-        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(USER_REGISTER_SERVICE);
-        String restURI = null;
-        for (ServiceInstance ServiceInstance : serviceInstances) {
-            if (ServiceInstance.getServiceId().equals(USER_REGISTER_SERVICE)) {
-                restURI = ServiceInstance.getUri().toString() + "/" + "v1/user";
-            }
-        }
-        result.add(restURI);
-        return result;
-    }
-    
-    @RequestMapping(value = "/v1/add/route", method = RequestMethod.GET)
-    public List<Object> registerRoute() {
-        List<Object> result = new ArrayList<Object>();
-        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(ROUTE_SERVICE);
-        String restURI = null;
-        for (ServiceInstance ServiceInstance : serviceInstances) {
-            if (ServiceInstance.getServiceId().equals(ROUTE_SERVICE)) {
-                restURI = ServiceInstance.getUri().toString() + "/" + "v1/add/route";
-            }
-        }
-        result.add(restURI);
-        return result;
-    }
-    
-    @RequestMapping(value = "/v1/route", method = RequestMethod.GET)
-    public List<Object> findByOriginAndDestination() {
-        List<Object> result = new ArrayList<Object>();
-        List<ServiceInstance> serviceInstances= this.discoveryClient.getInstances(ROUTE_SERVICE);
-        String restURI = null;
-        for (ServiceInstance ServiceInstance : serviceInstances) {
-            if (ServiceInstance.getServiceId().equals(ROUTE_SERVICE)) {
-                restURI = ServiceInstance.getUri().toString() + "/" + "v1/route";
-            }
-        }
-        result.add(restURI);
-        return result;
-    }
+	public String fallbackMethod() {
+		return "Service is Down";
+	}
 }
